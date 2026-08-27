@@ -1,0 +1,3 @@
+CREATE DATABASE keystone_db;
+CREATE USER postgres WITH ENCRYPTED PASSWORD 'postgres';
+GRANT ALL PRIVILEGES ON DATABASE keystone_db TO postgres;
