@@ -1,48 +1,35 @@
 package com.meridian.keystone.service;
 
-import com.meridian.keystone.domain.User;
 import com.meridian.keystone.dto.AuthResponse;
 import com.meridian.keystone.dto.LoginRequest;
+import com.meridian.keystone.domain.User;
 import com.meridian.keystone.repository.UserRepository;
 import com.meridian.keystone.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private UserRepository userRepository;
 
-    public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    public AuthResponse login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
-        if (!user.getActive()) {
-            throw new RuntimeException("Your account is disabled. Contact admin.");
-        }
+        String token = tokenProvider.generateToken(user.getEmail(), user.getRole().name());
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
-        }
-
-        String token = jwtTokenProvider.generateToken(user);
-
-        log.info("User logged in successfully: {}", user.getEmail());
-
-        return AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .email(user.getEmail())
-                .name(user.getName())
-                .role(user.getRole().toString())
-                .customerId(user.getCustomerOrg() != null
-                        ? user.getCustomerOrg().getId() : null)
-                .build();
+        return new AuthResponse(
+                token,
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getRole().name(),
+                null
+        );
     }
 }
