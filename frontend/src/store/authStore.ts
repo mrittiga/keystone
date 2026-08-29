@@ -21,20 +21,25 @@ export const useAuthStore = create<AuthStore>((set) => ({
     try {
       const response = await apiClient.post('/auth/login', { email, password })
       const data = response.data
+      const customerId = (data.customerId !== null && data.customerId !== undefined)
+        ? Number(data.customerId) : undefined
       const user: AuthUser = {
         userId: data.userId,
         email: data.email,
         name: data.name,
         role: data.role,
-        customerId: data.customerId,
+        customerId,
       }
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(user))
       set({ token: data.token, user, loading: false })
     } catch (error: any) {
       set({ loading: false })
-      const msg = error.response?.data?.message || 'Invalid email or password'
-      throw new Error(msg)
+      const msg = error.response?.data?.message ?? ''
+      if (msg && !msg.toLowerCase().includes('null') && !msg.toLowerCase().includes('sql')) {
+        throw new Error(msg)
+      }
+      throw new Error('Invalid email or password. Please try again.')
     }
   },
 
@@ -46,11 +51,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   initialize: () => {
     const token = localStorage.getItem('token')
-    const raw = localStorage.getItem('user')
+    const raw   = localStorage.getItem('user')
     if (token && raw) {
       try {
-        const user = JSON.parse(raw) as AuthUser
-        set({ token, user })
+        set({ token, user: JSON.parse(raw) as AuthUser })
       } catch {
         localStorage.removeItem('token')
         localStorage.removeItem('user')

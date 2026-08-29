@@ -40,5 +40,10 @@ public class WorkOrderStatusHistory {
     private String note;
 
     @Column(name = "changed_at", nullable = false, updatable = false)
-    private LocalDateTime changedAt = LocalDateTime.now();
+    private LocalDateTime changedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.changedAt == null) this.changedAt = LocalDateTime.now();
+    }
 }

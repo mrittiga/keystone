@@ -30,11 +30,11 @@ public class WorkOrder {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private WorkOrderStatus status = WorkOrderStatus.NEW;
+    private WorkOrderStatus status;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Priority priority = Priority.MEDIUM;
+    private Priority priority;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -58,34 +58,47 @@ public class WorkOrder {
     private LocalDateTime slaDueDate;
 
     @Column(name = "sla_breached")
-    private Boolean slaBreached = false;
+    private Boolean slaBreached;
 
-    @Column(name = "total_parts_price")
-    private BigDecimal totalPartsPrice = BigDecimal.ZERO;
+    @Column(name = "total_parts_price", precision = 12, scale = 2)
+    private BigDecimal totalPartsPrice;
 
     @Column(name = "total_minutes_worked")
-    private Long totalMinutesWorked = 0L;
+    private Long totalMinutesWorked;
 
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<WorkOrderStatusHistory> statusHistory = new HashSet<>();
 
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<PartUsage> partsUsed = new HashSet<>();
 
     @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @Builder.Default
     private Set<TimeLog> timeLogs = new HashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.status == null) this.status = WorkOrderStatus.NEW;
+        if (this.priority == null) this.priority = Priority.MEDIUM;
+        if (this.slaBreached == null) this.slaBreached = false;
+        if (this.totalPartsPrice == null) this.totalPartsPrice = BigDecimal.ZERO;
+        if (this.totalMinutesWorked == null) this.totalMinutesWorked = 0L;
+    }
 
     @PreUpdate
     public void preUpdate() {

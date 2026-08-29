@@ -27,19 +27,27 @@ public class Part {
     private String description;
 
     @Column(name = "unit_cost", nullable = false)
-    private BigDecimal unitCost = BigDecimal.ZERO;
+    private BigDecimal unitCost;
 
     @Column(name = "stock_quantity", nullable = false)
-    private Long stockQuantity = 0L;
+    private Long stockQuantity;
 
     @Column(name = "min_stock_level", nullable = false)
-    private Long minStockLevel = 0L;
+    private Long minStockLevel;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.unitCost == null) this.unitCost = BigDecimal.ZERO;
+        if (this.stockQuantity == null) this.stockQuantity = 0L;
+        if (this.minStockLevel == null) this.minStockLevel = 0L;
+    }
 
     @PreUpdate
     public void preUpdate() {

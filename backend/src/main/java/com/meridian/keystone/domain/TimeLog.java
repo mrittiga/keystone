@@ -35,5 +35,10 @@ public class TimeLog {
     private String note;
 
     @Column(name = "logged_at", nullable = false, updatable = false)
-    private LocalDateTime loggedAt = LocalDateTime.now();
+    private LocalDateTime loggedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.loggedAt == null) this.loggedAt = LocalDateTime.now();
+    }
 }

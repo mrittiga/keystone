@@ -36,9 +36,15 @@ public class PartUsage {
     private BigDecimal unitPrice;
 
     @Column(name = "used_at", nullable = false, updatable = false)
-    private LocalDateTime usedAt = LocalDateTime.now();
+    private LocalDateTime usedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.usedAt == null) this.usedAt = LocalDateTime.now();
+    }
 
     public BigDecimal getTotalPrice() {
+        if (unitPrice == null || quantityUsed == null) return BigDecimal.ZERO;
         return unitPrice.multiply(BigDecimal.valueOf(quantityUsed));
     }
 }

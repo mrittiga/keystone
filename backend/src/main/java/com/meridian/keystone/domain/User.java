@@ -30,6 +30,7 @@ public class User {
     private UserRole role;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,10 +40,16 @@ public class User {
     private Customer customerOrg;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.active == null) this.active = true;
+    }
 
     @PreUpdate
     public void preUpdate() {
