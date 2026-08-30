@@ -19,24 +19,22 @@ export const useAuthStore = create<AuthStore>((set) => ({
   login: async (email, password) => {
     set({ loading: true })
     try {
-      const response = await apiClient.post('/auth/login', { email, password })
-      const data = response.data
-      const customerId = (data.customerId !== null && data.customerId !== undefined)
-        ? Number(data.customerId) : undefined
+      const res = await apiClient.post('/auth/login', { email, password })
+      const d = res.data
       const user: AuthUser = {
-        userId: data.userId,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        customerId,
+        userId: d.userId,
+        email: d.email,
+        name: d.name,
+        role: d.role,
+        customerId: d.customerId != null ? Number(d.customerId) : undefined,
       }
-      localStorage.setItem('token', data.token)
+      localStorage.setItem('token', d.token)
       localStorage.setItem('user', JSON.stringify(user))
-      set({ token: data.token, user, loading: false })
-    } catch (error: any) {
+      set({ token: d.token, user, loading: false })
+    } catch (err: any) {
       set({ loading: false })
-      const msg = error.response?.data?.message ?? ''
-      if (msg && !msg.toLowerCase().includes('null') && !msg.toLowerCase().includes('sql')) {
+      const msg = err.response?.data?.message ?? ''
+      if (msg && !msg.includes('null') && !msg.includes('SQL') && !msg.includes('constraint')) {
         throw new Error(msg)
       }
       throw new Error('Invalid email or password. Please try again.')
@@ -53,12 +51,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     const token = localStorage.getItem('token')
     const raw   = localStorage.getItem('user')
     if (token && raw) {
-      try {
-        set({ token, user: JSON.parse(raw) as AuthUser })
-      } catch {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-      }
+      try { set({ token, user: JSON.parse(raw) }) }
+      catch { localStorage.removeItem('token'); localStorage.removeItem('user') }
     }
   },
 }))

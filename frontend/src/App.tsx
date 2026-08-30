@@ -57,7 +57,6 @@ function AppShell() {
 export default function App() {
   const { token, initialize } = useAuthStore()
   useEffect(() => { initialize() }, [initialize])
-
   return (
     <BrowserRouter>
       <Routes>
