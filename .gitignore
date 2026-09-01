@@ -6,3 +6,10 @@ frontend/build/
 .class
 .jar
 .war
+backend/target/*.original
+backend/target/classes/
+backend/target/generated-sources/
+backend/target/maven-archiver/
+backend/target/maven-status/
+backend/target/surefire-reports/
+backend/target/test-classes/
