@@ -2,33 +2,39 @@ spring:
   application:
     name: keystone
   datasource:
-    url: jdbc:postgresql://localhost:5432/keystone_db
-    username: keystoneuser
-    password: keystone123
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/keystone_db}
+    username: ${SPRING_DATASOURCE_USERNAME:keystoneuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:keystone123}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 3
+      minimum-idle: 1
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
     show-sql: false
   flyway:
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
     baseline-on-migrate: true
     locations: classpath:db/migration
 
 security:
   jwt:
-    secret: keystone-super-secret-key-minimum-32-chars-long
-    expiry: 86400000
+    secret: ${SECURITY_JWT_SECRET:keystone-super-secret-key-minimum-32-chars-long}
+    expiry: ${SECURITY_JWT_EXPIRY:86400000}
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 logging:
   level:
-    root: INFO
-    com.meridian: DEBUG
+    root: WARN
+    com.meridian: INFO
 
 springdoc:
   swagger-ui:
