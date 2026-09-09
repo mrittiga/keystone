@@ -1,0 +1,5 @@
+[providers]
+nixpacks = ["java"]
+
+[phases.setup]
+nixPkgs = ["jdk21"]
