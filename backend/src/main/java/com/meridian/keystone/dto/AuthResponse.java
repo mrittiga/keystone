@@ -3,7 +3,7 @@ package com.keystone.dto;
 import lombok.Data;
 import java.util.Set;
 
-public class AuthRequest {
+public class AuthResponse {
 
     @Data
     public static class RegisterDTO {

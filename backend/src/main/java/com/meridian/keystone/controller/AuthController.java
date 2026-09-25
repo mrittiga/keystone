@@ -1,11 +1,9 @@
-package com.keystone.controller;
+package com.meridian.keystone.controller;
 
-import com.keystone.dto.AuthRequest.*;
-import com.keystone.entity.Site;
-import com.keystone.entity.User;
-import com.keystone.repository.SiteRepository;
-import com.keystone.repository.UserRepository;
-import com.keystone.security.JwtUtils; // Replace with your JWT provider util
+import com.meridian.keystone.domain.*;
+import com.meridian.keystone.dto.*;
+import com.meridian.keystone.repository.*;
+import com.meridian.keystone.security.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Set;
 
 @RestController
