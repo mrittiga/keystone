@@ -1,14 +1,19 @@
 package com.meridian.keystone.controller;
 
-import com.meridian.keystone.domain.*;
-import com.meridian.keystone.dto.*;
-import com.meridian.keystone.repository.*;
-import com.meridian.keystone.security.*;
+import com.meridian.keystone.domain.Site;
+import com.meridian.keystone.domain.User;
+import com.meridian.keystone.dto.AuthResponse;
+import com.meridian.keystone.dto.LoginDTO;
+import com.meridian.keystone.dto.RegisterDTO;
+import com.meridian.keystone.repository.SiteRepository;
+import com.meridian.keystone.repository.UserRepository;
+import com.meridian.keystone.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,13 +40,11 @@ public class AuthController {
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        // Default to ROLE_CUSTOMER if no role provided
         Set assignedRoles = (dto.getRoles() == null || dto.getRoles().isEmpty()) 
                 ? Set.of("ROLE_CUSTOMER") 
                 : dto.getRoles();
         user.setRoles(assignedRoles);
 
-        // Auto-assign default site so new accounts do not throw 400 Bad Request
         Site defaultSite = siteRepository.findFirstByOrderByIdAsc()
                 .orElseGet(() -> {
                     Site site = new Site();
@@ -64,7 +67,12 @@ public class AuthController {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String token = jwtTokenProvider.generateToken(authentication);
+        String primaryRole = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .orElse("ROLE_CUSTOMER");
+
+        String token = jwtTokenProvider.generateToken(authentication.getName(), primaryRole);
 
         return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getRoles()));
     }

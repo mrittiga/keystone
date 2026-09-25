@@ -2,7 +2,9 @@ package com.meridian.keystone.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -19,40 +21,37 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String name;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
-
-    @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Customer customerOrg;
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
+    @Builder.Default
+    private Set roles = new HashSet<>();
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @ManyToMany
+    @JoinTable(
+        name = "user_sites",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "site_id")
+    )
+    @Builder.Default
+    private Set sites = new HashSet<>();
 
-    @PrePersist
-    public void prePersist() {
-        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
-        if (this.active == null) this.active = true;
+    public void setPassword(String password) {
+        this.passwordHash = password;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public String getPassword() {
+        return this.passwordHash;
     }
 }

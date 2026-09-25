@@ -1,14 +1,18 @@
 package com.meridian.keystone.service;
 
+import com.meridian.keystone.domain.User;
+import com.meridian.keystone.domain.UserRole;
 import com.meridian.keystone.dto.AuthResponse;
+import com.meridian.keystone.dto.AuthUserResponse;
 import com.meridian.keystone.dto.LoginRequest;
 import com.meridian.keystone.dto.RegisterRequest;
-import com.meridian.keystone.domain.User;
 import com.meridian.keystone.repository.UserRepository;
 import com.meridian.keystone.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
 
 @Service
 public class AuthService {
@@ -31,7 +35,8 @@ public class AuthService {
             throw new RuntimeException("Invalid email or password");
         }
 
-        String token = tokenProvider.generateToken(user.getEmail(), user.getRole().name());
+        String role = (user.getRole() != null) ? user.getRole().name() : "ROLE_CUSTOMER";
+        String token = tokenProvider.generateToken(user.getEmail(), role);
 
         return new AuthResponse(token, AuthUserResponse.from(user));
     }
@@ -46,7 +51,8 @@ public class AuthService {
                 .email(email)
                 .name(registerRequest.getName())
                 .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
-                .role(com.meridian.keystone.domain.UserRole.CUSTOMER)
+                .role(UserRole.CUSTOMER)
+                .roles(Set.of("ROLE_CUSTOMER"))
                 .active(true)
                 .build();
 
