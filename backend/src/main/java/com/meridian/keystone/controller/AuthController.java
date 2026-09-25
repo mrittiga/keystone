@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Set;
 
 @RestController
@@ -22,7 +23,7 @@ public class AuthController {
     private final SiteRepository siteRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtUtils jwtUtils;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity registerUser(@RequestBody RegisterDTO dto) {
@@ -63,7 +64,7 @@ public class AuthController {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String token = jwtUtils.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication);
 
         return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getRoles()));
     }
