@@ -13,17 +13,13 @@ import Parts          from './pages/Parts'
 import Reports        from './pages/Reports'
 import Layout         from './components/Layout'
 import PrivateRoute   from './components/PrivateRoute'
+import RoleBasedRoute, { roleHomePath } from './components/RoleBasedRoute'
+import type { Role } from './types'
 
-function AppShell() {
+function AppShell({ initialPage }: { initialPage: string }) {
   const { user } = useAuthStore()
 
-  const defaultPage = () => {
-    if (user?.role === 'TECHNICIAN') return 'myjobs'
-    if (user?.role === 'CUSTOMER')   return 'portal'
-    return 'dashboard'
-  }
-
-  const [page, setPage]                  = useState(defaultPage)
+  const [page, setPage]                  = useState(initialPage)
   const [selectedOrderId, setSelectedId] = useState<number | null>(null)
 
   function openOrder(id: number) { setSelectedId(id); setPage('detail') }
@@ -54,16 +50,37 @@ function AppShell() {
   )
 }
 
+function RoleHome() {
+  const user = useAuthStore(state => state.user)
+  return user ? <Navigate to={roleHomePath(user.role)} replace /> : <Navigate to="/login" replace />
+}
+
+function RolePage({ roles, page }: { roles: Role[]; page: string }) {
+  return <RoleBasedRoute roles={roles} />
+}
+
 export default function App() {
-  const { token, initialize } = useAuthStore()
+  const { token, initialized, initialize } = useAuthStore()
   useEffect(() => { initialize() }, [initialize])
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route element={<PrivateRoute token={token} />}>
-          <Route path="/app" element={<AppShell />} />
+        <Route element={<PrivateRoute token={token} initialized={initialized} />}>
+          <Route path="/app" element={<RoleHome />} />
+          <Route element={<RoleBasedRoute roles={['MANAGER']} />}>
+            <Route path="/manager/dashboard" element={<AppShell initialPage="dashboard" />} />
+          </Route>
+          <Route element={<RoleBasedRoute roles={['DISPATCHER']} />}>
+            <Route path="/dispatcher/dashboard" element={<AppShell initialPage="dashboard" />} />
+          </Route>
+          <Route element={<RoleBasedRoute roles={['TECHNICIAN']} />}>
+            <Route path="/technician/dashboard" element={<AppShell initialPage="myjobs" />} />
+          </Route>
+          <Route element={<RoleBasedRoute roles={['CUSTOMER']} />}>
+            <Route path="/customer/dashboard" element={<AppShell initialPage="portal" />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to={token ? '/app' : '/login'} replace />} />
       </Routes>

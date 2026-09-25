@@ -7,8 +7,15 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-export async function registerUser(name: string, email: string, password: string) {
-  await apiClient.post('/auth/register', { name, email, password })
+export async function registerUser(name: string, email: string, password: string, role = 'CUSTOMER') {
+  await apiClient.post('/auth/register', { name, email, password, role })
+}
+
+export function getApiErrorMessage(error: any, fallback: string) {
+  const data = error.response?.data
+  if (data?.fieldErrors) return Object.values(data.fieldErrors).join(' ')
+  if (data?.message && !String(data.message).toLowerCase().includes('sql')) return data.message
+  return fallback
 }
 
 apiClient.interceptors.request.use((config) => {

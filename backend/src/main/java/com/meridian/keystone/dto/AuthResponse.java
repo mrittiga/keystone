@@ -1,19 +1,33 @@
-package com.meridian.keystone.dto;
+package com.keystone.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Set;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class AuthResponse {
-    private String token;
-    private Long userId;
-    private String email;
-    private String name;
-    private String role;
-    private Long customerId;
+public class AuthRequest {
+
+    @Data
+    public static class RegisterDTO {
+        private String email;
+        private String password;
+        private Set roles; // e.g., ["ROLE_MANAGER"] or ["ROLE_CUSTOMER"]
+    }
+
+    @Data
+    public static class LoginDTO {
+        private String email;
+        private String password;
+    }
+
+    @Data
+    public static class AuthResponse {
+        private String token;
+        private String email;
+        private Set roles;
+
+        public AuthResponse(String token, String email, Set roles) {
+            this.token = token;
+            this.email = email;
+            this.roles = roles;
+        }
+    }
 }

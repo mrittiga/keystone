@@ -50,6 +50,16 @@ public class WorkOrderService {
         User currentUser = getCurrentUser();
 
         if (currentUser.getRole() == UserRole.CUSTOMER) {
+            if (currentUser.getCustomerOrg() == null) {
+                return PageResponse.<WorkOrderDTO>builder()
+                        .content(List.of())
+                        .page(page)
+                        .size(size)
+                        .totalElements(0)
+                        .totalPages(0)
+                        .last(true)
+                        .build();
+            }
             WorkOrderStatus requestedStatus = status != null && !status.isEmpty()
                 ? WorkOrderStatus.valueOf(status.toUpperCase()) : null;
             result = requestedStatus == null

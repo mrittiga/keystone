@@ -6,6 +6,7 @@ interface AuthStore {
   token: string | null
   user: AuthUser | null
   loading: boolean
+  initialized: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   initialize: () => void
@@ -15,6 +16,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   token: null,
   user: null,
   loading: false,
+  initialized: false,
 
   login: async (email, password) => {
     set({ loading: true })
@@ -22,13 +24,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const response = await apiClient.post('/auth/login', { email, password })
       const data = response.data
       const token = String(data.token).replace(/^Bearer\s+/i, '')
-      const customerId = (data.customerId !== null && data.customerId !== undefined)
-        ? Number(data.customerId) : undefined
+      const identity = data.user ?? data
+      const customerId = (identity.customerId !== null && identity.customerId !== undefined)
+        ? Number(identity.customerId) : undefined
       const user: AuthUser = {
-        userId: data.userId,
-        email: data.email,
-        name: data.name,
-        role: data.role,
+        userId: Number(identity.id ?? identity.userId),
+        email: identity.email,
+        name: identity.name,
+        role: String(identity.role).toUpperCase() as AuthUser['role'],
         customerId,
       }
       localStorage.setItem('token', token)
@@ -36,7 +39,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({ token, user, loading: false })
     } catch (error: any) {
       set({ loading: false })
-      const msg = error.response?.data?.message ?? ''
+      const responseData = error.response?.data
+      const fieldErrors = responseData?.fieldErrors
+        ? Object.values(responseData.fieldErrors).join(' ')
+        : ''
+      const msg = fieldErrors || responseData?.message || ''
       if (msg && !msg.toLowerCase().includes('null') && !msg.toLowerCase().includes('sql')) {
         throw new Error(msg)
       }
@@ -61,5 +68,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
         localStorage.removeItem('user')
       }
     }
+    set({ initialized: true })
   },
 }))

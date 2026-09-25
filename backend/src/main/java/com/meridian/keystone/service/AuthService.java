@@ -23,7 +23,7 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     public AuthResponse login(LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail())
+        User user = userRepository.findByEmail(loginRequest.getEmail().trim().toLowerCase())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
         if (!Boolean.TRUE.equals(user.getActive())
@@ -33,14 +33,7 @@ public class AuthService {
 
         String token = tokenProvider.generateToken(user.getEmail(), user.getRole().name());
 
-        return new AuthResponse(
-                token,
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getRole().name(),
-                user.getCustomerOrg() != null ? user.getCustomerOrg().getId() : null
-        );
+        return new AuthResponse(token, AuthUserResponse.from(user));
     }
 
     public void register(RegisterRequest registerRequest) {
