@@ -1,5 +1,4 @@
-package com.keystone.dto;
-
+package com.meridian.keystone.dto;
 import lombok.Data;
 import java.util.Set;
 
