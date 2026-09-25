@@ -32,7 +32,7 @@ chat:
   provider: ${CHAT_PROVIDER:gemini}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:
