@@ -47,8 +47,15 @@ public class WorkOrderService {
                 Sort.by("createdAt").descending());
 
         Page<WorkOrder> result;
+        User currentUser = getCurrentUser();
 
-        if (status != null && !status.isEmpty()) {
+        if (currentUser.getRole() == UserRole.CUSTOMER) {
+            WorkOrderStatus requestedStatus = status != null && !status.isEmpty()
+                ? WorkOrderStatus.valueOf(status.toUpperCase()) : null;
+            result = requestedStatus == null
+                ? workOrderRepository.findByCustomerId(currentUser.getCustomerOrg().getId(), pageable)
+                : workOrderRepository.findByCustomerIdAndStatus(currentUser.getCustomerOrg().getId(), requestedStatus, pageable);
+        } else if (status != null && !status.isEmpty()) {
             WorkOrderStatus s = WorkOrderStatus.valueOf(status.toUpperCase());
             result = workOrderRepository.findByStatus(s, pageable);
         } else {
@@ -83,6 +90,12 @@ public class WorkOrderService {
 
     public WorkOrderDetailDTO getWorkOrderDetail(Long id) {
         WorkOrder order = findOrder(id);
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == UserRole.CUSTOMER
+                && (currentUser.getCustomerOrg() == null
+                || !currentUser.getCustomerOrg().getId().equals(order.getCustomer().getId()))) {
+            throw new org.springframework.security.access.AccessDeniedException("Customer access is limited to your account");
+        }
         order.getStatusHistory().size();
         order.getPartsUsed().size();
         order.getTimeLogs().size();
@@ -100,6 +113,16 @@ public class WorkOrderService {
         Site site = siteRepository.findById(request.getSiteId())
                 .orElseThrow(() -> new RuntimeException(
                         "Site not found: " + request.getSiteId()));
+
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == UserRole.CUSTOMER
+                && (currentUser.getCustomerOrg() == null
+                || !currentUser.getCustomerOrg().getId().equals(customer.getId()))) {
+            throw new org.springframework.security.access.AccessDeniedException("Customer access is limited to your account");
+        }
+        if (!site.getCustomer().getId().equals(customer.getId())) {
+            throw new IllegalArgumentException("Site does not belong to the selected customer");
+        }
 
         Priority priority = Priority.valueOf(
                 request.getPriority().toUpperCase());

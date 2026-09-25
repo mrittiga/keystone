@@ -5,6 +5,7 @@ import com.meridian.keystone.domain.Site;
 import com.meridian.keystone.dto.*;
 import com.meridian.keystone.repository.CustomerRepository;
 import com.meridian.keystone.repository.SiteRepository;
+import com.meridian.keystone.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +27,7 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final SiteRepository siteRepository;
+    private final UserRepository userRepository;
 
     public PageResponse<CustomerDTO> getAllCustomers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
@@ -73,8 +77,15 @@ public class CustomerService {
     }
 
     public PageResponse<SiteDTO> getSitesByCustomer(Long customerId, int page, int size) {
-        customerRepository.findById(customerId)
+        Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        userRepository.findByEmail(email).ifPresent(user -> {
+            if (user.getRole() == com.meridian.keystone.domain.UserRole.CUSTOMER
+                    && (user.getCustomerOrg() == null || !user.getCustomerOrg().getId().equals(customer.getId()))) {
+                throw new AccessDeniedException("Customer access is limited to your account");
+            }
+        });
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         Page<SiteDTO> result = siteRepository.findByCustomerId(customerId, pageable)

@@ -10,6 +10,11 @@ export default function TechnicianView({ onSelectOrder }: Props) {
   const [orders, setOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [manageJob, setManageJob] = useState<WorkOrder | null>(null)
+  const [jobTab, setJobTab] = useState<'Notes'|'Checklist'|'Parts Log'|'Photos'|'Signature'>('Notes')
+  const [jobNotes, setJobNotes] = useState('')
+  const [checks, setChecks] = useState([false, false, false])
+  const [jobPhotos, setJobPhotos] = useState<string[]>([])
 
   useEffect(() => {
     apiClient.get<WorkOrder[]>('/work-orders/my-assigned')
@@ -98,6 +103,8 @@ export default function TechnicianView({ onSelectOrder }: Props) {
                   onClick={e => { e.stopPropagation(); onSelectOrder(o.id) }}>
                   Open Job →
                 </button>
+                <button className="btn btn-secondary btn-sm" style={{ marginLeft:8 }} onClick={e => { e.stopPropagation(); const address = o.siteAddress || o.siteName || ''; window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank', 'noopener,noreferrer') }}>🧭 Get Directions</button>
+                <button className="btn btn-warning btn-sm" style={{ marginLeft:8 }} onClick={e => { e.stopPropagation(); setManageJob(o); setJobTab('Notes') }}>🧰 Manage Job</button>
               </div>
             </div>
           ))}
@@ -123,6 +130,17 @@ export default function TechnicianView({ onSelectOrder }: Props) {
           ))}
         </>
       )}
+
+      {manageJob && <div className="modal-overlay open" onClick={() => setManageJob(null)}><div className="modal" style={{ maxWidth:640 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}><div><h2>🧰 Manage {manageJob.code}</h2><p style={{ color:'var(--text-muted)', fontSize:12 }}>{manageJob.title}</p></div><button className="btn btn-secondary btn-sm" onClick={() => setManageJob(null)}>Close</button></div>
+        <div style={{ display:'flex', gap:5, overflowX:'auto', margin:'20px 0 16px', paddingBottom:4 }}>{(['Notes','Checklist','Parts Log','Photos','Signature'] as const).map(tab => <button key={tab} className={jobTab === tab ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'} onClick={() => setJobTab(tab)}>{tab}</button>)}</div>
+        {jobTab === 'Notes' && <textarea className="textarea" value={jobNotes} onChange={e => setJobNotes(e.target.value)} placeholder="Add site notes, findings, and handover details..." />}
+        {jobTab === 'Checklist' && <div style={{ display:'grid', gap:10 }}>{['Confirm site access','Inspect equipment','Test system and clean area'].map((item, index) => <label key={item} style={{ display:'flex', gap:10, alignItems:'center', padding:12, background:'rgba(255,255,255,.05)', borderRadius:8 }}><input type="checkbox" checked={checks[index]} onChange={() => setChecks(current => current.map((checked, i) => i === index ? !checked : checked))} />{item}</label>)}</div>}
+        {jobTab === 'Parts Log' && <div className="alert alert-warning">Parts logging is available from the job detail view. Open the order to record stock usage.</div>}
+        {jobTab === 'Photos' && <><input className="input" type="file" accept="image/*" multiple onChange={e => setJobPhotos(Array.from(e.target.files ?? []).map(file => URL.createObjectURL(file)))} /><div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:12 }}>{jobPhotos.map(src => <img key={src} src={src} alt="Job site preview" style={{ width:100, height:78, objectFit:'cover', borderRadius:8 }} />)}</div></>}
+        {jobTab === 'Signature' && <div><div style={{ height:150, border:'1px dashed rgba(167,139,250,.6)', borderRadius:10, display:'grid', placeItems:'center', color:'var(--text-muted)', background:'rgba(255,255,255,.03)' }}>✍️ Tap or draw signature here</div><p style={{ color:'var(--text-muted)', fontSize:12, marginTop:8 }}>Digital signature capture is simulated for this demo.</p></div>}
+        <div className="btn-row"><button className="btn btn-primary" onClick={() => setManageJob(null)}>Save Job Updates</button></div>
+      </div></div>}
     </div>
   )
 }

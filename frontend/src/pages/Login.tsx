@@ -2,16 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 
-const DEMOS = [
-  { email: 'manager@meridian.com',    role: 'Manager',    icon: '👔', desc: 'Dashboard & reports' },
-  { email: 'dispatcher@meridian.com', role: 'Dispatcher', icon: '📡', desc: 'Create & assign orders' },
-  { email: 'technician@meridian.com', role: 'Technician', icon: '🛠️', desc: 'Field work & logging' },
-  { email: 'customer@acme.com',       role: 'Customer',   icon: '🏢', desc: 'Self-service portal' },
-]
-
 export default function Login() {
-  const [email, setEmail] = useState('manager@meridian.com')
-  const [password, setPassword] = useState('Test@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [mode, setMode] = useState<'signin' | 'register' | 'forgot'>('signin')
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const { login, loading } = useAuthStore()
   const navigate = useNavigate()
@@ -19,6 +15,14 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (mode === 'forgot') {
+      setNotice(`Reset instructions sent to ${email}`)
+      return
+    }
+    if (mode === 'register') {
+      setNotice('Registration is queued for administrator approval.')
+      return
+    }
     try {
       await login(email, password)
       navigate('/app')
@@ -67,6 +71,11 @@ export default function Login() {
           {error && (
             <div className="alert alert-error">⚠️ {error}</div>
           )}
+          {notice && <div className="alert alert-success">✅ {notice}</div>}
+
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6, marginBottom:24, padding:4, background:'rgba(255,255,255,.05)', borderRadius:10 }}>
+            {([['signin','Sign In'],['register','Register'],['forgot','Forgot Password']] as const).map(([value,label]) => <button key={value} type="button" onClick={() => { setMode(value); setError(''); setNotice('') }} style={{ padding:'9px 4px', border:0, borderRadius:7, cursor:'pointer', color: mode === value ? '#fff' : 'var(--text-muted)', background: mode === value ? 'rgba(124,58,237,.7)' : 'transparent', fontWeight:700, fontSize:11 }}>{label}</button>)}
+          </div>
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -78,51 +87,24 @@ export default function Login() {
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input className="input" type="password" required
-                value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••" />
+              <div style={{ position:'relative' }}>
+                <input className="input" style={{ paddingRight:48 }} type={showPassword ? 'text' : 'password'} required={mode !== 'forgot'}
+                  value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
+                <button type="button" title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(v => !v)} style={{ position:'absolute', right:8, top:5, height:34, width:34, border:0, background:'transparent', cursor:'pointer', fontSize:20 }}>{showPassword ? '🐵' : '🙈'}</button>
+              </div>
             </div>
+
+            {mode === 'register' && <div className="form-group"><label className="form-label">Full name</label><input className="input" required placeholder="Your name" /></div>}
 
             <button type="submit" className="btn btn-primary btn-lg"
               style={{ width: '100%' }} disabled={loading}>
-              {loading ? '⏳ Signing in...' : '🚀 Sign In'}
+              {loading ? '⏳ Signing in...' : mode === 'forgot' ? '📨 Send Reset Link' : mode === 'register' ? '✨ Create Account' : '🚀 Sign In'}
             </button>
           </form>
 
-          <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
-              Quick demo — click to prefill (password: <code style={{
-                background: 'rgba(124,58,237,0.2)', padding: '2px 7px',
-                borderRadius: 4, color: '#a78bfa', fontFamily: 'monospace'
-              }}>Test@123</code>)
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {DEMOS.map(d => (
-                <button key={d.email}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 12, padding: '12px 14px',
-                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-                    color: 'var(--text-primary)',
-                  }}
-                  onClick={() => { setEmail(d.email); setPassword('Test@123') }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.15)'
-                    ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)'
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'
-                    ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'
-                  }}
-                >
-                  <div style={{ fontSize: 20, marginBottom: 4 }}>{d.icon}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{d.role}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{d.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+          <p style={{ marginTop: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+            Need access? Contact your Keystone administrator.
+          </p>
         </div>
 
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, marginTop: 20 }}>

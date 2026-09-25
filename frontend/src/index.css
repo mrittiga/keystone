@@ -38,6 +38,21 @@
   --transition-fast: all 0.15s ease;
 }
 
+body.theme-light {
+  --text-primary: #172033;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --bg-primary: #eef2ff;
+  --bg-secondary: #e0e7ff;
+  --glass-bg: rgba(255,255,255,.72);
+  --glass-border: rgba(71,85,105,.18);
+  --glass-shadow: 0 8px 32px rgba(51,65,85,.14);
+}
+
+.header-menu-item { display:block; width:100%; padding:10px; border:0; border-radius:8px; background:transparent; color:var(--text-primary); text-align:left; font:inherit; cursor:pointer; }
+.header-menu-item:hover { background:rgba(124,58,237,.14); }
+.header-menu-item.danger { color:#f87171; }
+
 html, body, #root {
   height: 100%;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

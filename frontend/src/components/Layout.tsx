@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { Role } from '../types'
+import HeaderNav from './HeaderNav'
 
 interface MenuItem { key: string; label: string; icon: string }
 
@@ -40,11 +41,19 @@ export default function Layout({ currentPage, setPage, children }: Props) {
   const { user, logout } = useAuthStore()
   const navigate         = useNavigate()
   const [mini, setMini]  = useState(false)
+  const [dark, setDark]  = useState(() => localStorage.getItem('keystone-theme') !== 'light')
   const items            = user?.role ? (MENUS[user.role] ?? []) : []
   const W                = mini ? 60 : 230
 
+  function toggleTheme() {
+    setDark(value => {
+      localStorage.setItem('keystone-theme', value ? 'light' : 'dark')
+      return !value
+    })
+  }
+
   return (
-    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'linear-gradient(135deg,#0f0c29 0%,#1a1040 50%,#0d1b2a 100%)' }}>
+    <div className={dark ? '' : 'theme-light'} style={{ display:'flex', height:'100vh', overflow:'hidden', background: dark ? 'linear-gradient(135deg,#0f0c29 0%,#1a1040 50%,#0d1b2a 100%)' : 'linear-gradient(135deg,#eef2ff,#f8fafc 55%,#cffafe)' }}>
 
       {/* BG orbs */}
       {[
@@ -244,9 +253,10 @@ export default function Layout({ currentPage, setPage, children }: Props) {
       {/* ── MAIN CONTENT ── */}
       <main style={{
         flex:1, overflowY:'auto', overflowX:'hidden',
-        padding:'26px 20px',
+        padding:'20px 24px',
         position:'relative', zIndex:1,
       }}>
+        <HeaderNav dark={dark} onToggleTheme={toggleTheme} />
         {children}
       </main>
 

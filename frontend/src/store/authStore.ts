@@ -21,6 +21,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     try {
       const response = await apiClient.post('/auth/login', { email, password })
       const data = response.data
+      const token = String(data.token).replace(/^Bearer\s+/i, '')
       const customerId = (data.customerId !== null && data.customerId !== undefined)
         ? Number(data.customerId) : undefined
       const user: AuthUser = {
@@ -30,9 +31,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
         role: data.role,
         customerId,
       }
-      localStorage.setItem('token', data.token)
+      localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
-      set({ token: data.token, user, loading: false })
+      set({ token, user, loading: false })
     } catch (error: any) {
       set({ loading: false })
       const msg = error.response?.data?.message ?? ''

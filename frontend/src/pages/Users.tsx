@@ -10,7 +10,7 @@ export default function Users() {
   const [error, setError]     = useState('')
   const [success, setSuccess] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: 'Test@123', role: 'TECHNICIAN' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TECHNICIAN' })
   const [submitting, setSubmitting] = useState(false)
 
   const load = () => {
@@ -28,7 +28,7 @@ export default function Users() {
     try {
       await apiClient.post('/users', form)
       setShowForm(false)
-      setForm({ name: '', email: '', password: 'Test@123', role: 'TECHNICIAN' })
+      setForm({ name: '', email: '', password: '', role: 'TECHNICIAN' })
       setSuccess('User created successfully'); setTimeout(() => setSuccess(''), 3000)
       load()
     } catch (e: any) {
