@@ -1,32 +1,30 @@
 package com.meridian.keystone.dto;
+
 import lombok.Data;
 import java.util.Set;
 
-public class AuthResponse {
+@Data
+public class RegisterDTO {
+    private String email;
+    private String password;
+    private Set roles;
+}
 
-    @Data
-    public static class RegisterDTO {
-        private String email;
-        private String password;
-        private Set roles; // e.g., ["ROLE_MANAGER"] or ["ROLE_CUSTOMER"]
-    }
+@Data
+class LoginDTO {
+    private String email;
+    private String password;
+}
 
-    @Data
-    public static class LoginDTO {
-        private String email;
-        private String password;
-    }
+@Data
+class AuthResponse {
+    private String token;
+    private String email;
+    private Set roles;
 
-    @Data
-    public static class AuthResponse {
-        private String token;
-        private String email;
-        private Set roles;
-
-        public AuthResponse(String token, String email, Set roles) {
-            this.token = token;
-            this.email = email;
-            this.roles = roles;
-        }
+    public AuthResponse(String token, String email, Set roles) {
+        this.token = token;
+        this.email = email;
+        this.roles = roles;
     }
 }
