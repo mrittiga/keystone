@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { registerUser } from '../services/api'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [mode, setMode] = useState<'signin' | 'register' | 'forgot'>('signin')
   const [notice, setNotice] = useState('')
@@ -20,7 +22,14 @@ export default function Login() {
       return
     }
     if (mode === 'register') {
-      setNotice('Registration is queued for administrator approval.')
+      try {
+        await registerUser(name, email, password)
+        setNotice('Account created. You can now sign in.')
+        setMode('signin')
+        setPassword('')
+      } catch (err: any) {
+        setError(err.response?.data?.message ?? 'Unable to create account.')
+      }
       return
     }
     try {
@@ -94,7 +103,7 @@ export default function Login() {
               </div>
             </div>
 
-            {mode === 'register' && <div className="form-group"><label className="form-label">Full name</label><input className="input" required placeholder="Your name" /></div>}
+            {mode === 'register' && <div className="form-group"><label className="form-label">Full name</label><input className="input" required value={name} onChange={e => setName(e.target.value)} placeholder="Your name" /></div>}
 
             <button type="submit" className="btn btn-primary btn-lg"
               style={{ width: '100%' }} disabled={loading}>

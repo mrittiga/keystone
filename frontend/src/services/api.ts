@@ -7,6 +7,10 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+export async function registerUser(name: string, email: string, password: string) {
+  await apiClient.post('/auth/register', { name, email, password })
+}
+
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {

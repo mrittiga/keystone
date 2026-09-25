@@ -2,7 +2,10 @@ package com.meridian.keystone.controller;
 
 import com.meridian.keystone.dto.AuthResponse;
 import com.meridian.keystone.dto.LoginRequest;
+import com.meridian.keystone.dto.RegisterRequest;
 import com.meridian.keystone.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,5 +23,11 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
         AuthResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        authService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

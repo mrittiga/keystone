@@ -2,6 +2,7 @@ package com.meridian.keystone.service;
 
 import com.meridian.keystone.dto.AuthResponse;
 import com.meridian.keystone.dto.LoginRequest;
+import com.meridian.keystone.dto.RegisterRequest;
 import com.meridian.keystone.domain.User;
 import com.meridian.keystone.repository.UserRepository;
 import com.meridian.keystone.security.JwtTokenProvider;
@@ -40,5 +41,22 @@ public class AuthService {
                 user.getRole().name(),
                 user.getCustomerOrg() != null ? user.getCustomerOrg().getId() : null
         );
+    }
+
+    public void register(RegisterRequest registerRequest) {
+        String email = registerRequest.getEmail().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already in use: " + email);
+        }
+
+        User user = User.builder()
+                .email(email)
+                .name(registerRequest.getName())
+                .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
+                .role(com.meridian.keystone.domain.UserRole.CUSTOMER)
+                .active(true)
+                .build();
+
+        userRepository.save(user);
     }
 }
