@@ -2,9 +2,8 @@ package com.meridian.keystone.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "customers")
@@ -14,49 +13,40 @@ import java.util.Set;
 @Builder
 public class Customer {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+@Column(nullable = false, unique = true)
+private String code;
 
-    @Column(nullable = false, unique = true)
-    private String code;
+@Column(nullable = false)
+private String name;
 
-    @Column(name = "contact_email")
-    private String contactEmail;
+@Column(name = "contact_email")
+private String email;
 
-    @Column(name = "contact_phone")
-    private String contactPhone;
+@Column(name = "contact_phone")
+private String phone;
 
-    private String address;
+private String address;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @Builder.Default
-    private Set<Site> sites = new HashSet<>();
+@Column(name = "created_at", nullable = false, updatable = false)
+private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @Builder.Default
-    private Set<WorkOrder> workOrders = new HashSet<>();
+@Column(name = "updated_at")
+private LocalDateTime updatedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+@PrePersist
+public void prePersist() {
+    if (createdAt == null) {
+        createdAt = LocalDateTime.now();
     }
+}
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+@PreUpdate
+public void preUpdate() {
+    updatedAt = LocalDateTime.now();
+}
+
 }

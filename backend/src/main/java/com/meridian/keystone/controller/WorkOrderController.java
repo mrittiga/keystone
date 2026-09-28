@@ -1,5 +1,6 @@
 package com.meridian.keystone.controller;
 
+import com.meridian.keystone.domain.User;
 import com.meridian.keystone.dto.*;
 import com.meridian.keystone.service.WorkOrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,12 @@ public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
 
+    /*
+     * =========================================================
+     * GET ALL WORK ORDERS
+     * =========================================================
+     */
+
     @GetMapping
     @PreAuthorize("authenticated")
     @Operation(summary = "List work orders — role scoped and paginated")
@@ -31,50 +38,122 @@ public class WorkOrderController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority) {
+
         return ResponseEntity.ok(
-                workOrderService.getAllWorkOrders(page, size, status, priority));
+                workOrderService.getAllWorkOrders(
+                        page,
+                        size,
+                        status,
+                        priority
+                )
+        );
     }
 
+    /*
+     * =========================================================
+     * MY ASSIGNED WORK ORDERS
+     * =========================================================
+     */
+
     @GetMapping("/my-assigned")
-    @PreAuthorize("hasRole('TECHNICIAN')")
-    @Operation(summary = "Get work orders assigned to current technician")
-    public ResponseEntity<List<WorkOrderDTO>> getMyAssigned() {
-        return ResponseEntity.ok(workOrderService.getMyAssignedWorkOrders());
-    }
+    public ResponseEntity<?> getMyAssigned(
+            @RequestAttribute("currentUser") User user) {
+
+    return ResponseEntity.ok(
+            workOrderService.getMyAssignedWorkOrders()
+        );
+  }
+    /*
+     * =========================================================
+     * GET WORK ORDER DETAIL
+     * =========================================================
+     */
 
     @GetMapping("/{id}")
     @PreAuthorize("authenticated")
     @Operation(summary = "Get work order with full history, parts, and time logs")
-    public ResponseEntity<WorkOrderDetailDTO> getWorkOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(workOrderService.getWorkOrderDetail(id));
+    public ResponseEntity<WorkOrderDetailDTO> getWorkOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                workOrderService.getWorkOrderDetail(id)
+        );
     }
 
+    /*
+     * =========================================================
+     * CREATE WORK ORDER
+     * =========================================================
+     */
+
     @PostMapping
-    @PreAuthorize("hasRole('DISPATCHER') or hasRole('MANAGER') or hasRole('CUSTOMER')")
+    @PreAuthorize(
+            "hasRole('DISPATCHER') or " +
+            "hasRole('MANAGER') or " +
+            "hasRole('CUSTOMER')"
+    )
     @Operation(summary = "Create a new work order")
     public ResponseEntity<WorkOrderDTO> createWorkOrder(
             @Valid @RequestBody CreateWorkOrderRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(workOrderService.createWorkOrder(request));
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        workOrderService.createWorkOrder(request)
+                );
     }
 
+    /*
+     * =========================================================
+     * UPDATE WORK ORDER
+     * =========================================================
+     */
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('DISPATCHER') or hasRole('MANAGER')")
+    @PreAuthorize(
+            "hasRole('DISPATCHER') or hasRole('MANAGER')"
+    )
     @Operation(summary = "Update work order — only while open")
     public ResponseEntity<WorkOrderDTO> updateWorkOrder(
             @PathVariable Long id,
             @RequestBody UpdateWorkOrderRequest request) {
-        return ResponseEntity.ok(workOrderService.updateWorkOrder(id, request));
+
+        return ResponseEntity.ok(
+                workOrderService.updateWorkOrder(
+                        id,
+                        request
+                )
+        );
     }
 
+    /*
+     * =========================================================
+     * ASSIGN WORK ORDER
+     * =========================================================
+     */
+
     @PostMapping("/{id}/assign")
-    @PreAuthorize("hasRole('DISPATCHER') or hasRole('MANAGER')")
+    @PreAuthorize(
+            "hasRole('DISPATCHER') or hasRole('MANAGER')"
+    )
     @Operation(summary = "Assign work order to a technician")
     public ResponseEntity<WorkOrderDTO> assignWorkOrder(
             @PathVariable Long id,
             @Valid @RequestBody AssignWorkOrderRequest request) {
-        return ResponseEntity.ok(workOrderService.assignWorkOrder(id, request));
+
+        return ResponseEntity.ok(
+                workOrderService.assignWorkOrder(
+                        id,
+                        request
+                )
+        );
     }
+
+    /*
+     * =========================================================
+     * CHANGE STATUS
+     * =========================================================
+     */
 
     @PostMapping("/{id}/status")
     @PreAuthorize("authenticated")
@@ -82,8 +161,20 @@ public class WorkOrderController {
     public ResponseEntity<WorkOrderDTO> changeStatus(
             @PathVariable Long id,
             @Valid @RequestBody ChangeStatusRequest request) {
-        return ResponseEntity.ok(workOrderService.changeStatus(id, request));
+
+        return ResponseEntity.ok(
+                workOrderService.changeStatus(
+                        id,
+                        request
+                )
+        );
     }
+
+    /*
+     * =========================================================
+     * LOG PART USAGE
+     * =========================================================
+     */
 
     @PostMapping("/{id}/parts")
     @PreAuthorize("hasRole('TECHNICIAN')")
@@ -91,9 +182,20 @@ public class WorkOrderController {
     public ResponseEntity<Void> logParts(
             @PathVariable Long id,
             @Valid @RequestBody LogPartUsageRequest request) {
-        workOrderService.logPartUsage(id, request);
+
+        workOrderService.logPartUsage(
+                id,
+                request
+        );
+
         return ResponseEntity.noContent().build();
     }
+
+    /*
+     * =========================================================
+     * LOG TIME WORKED
+     * =========================================================
+     */
 
     @PostMapping("/{id}/time")
     @PreAuthorize("hasRole('TECHNICIAN')")
@@ -101,7 +203,12 @@ public class WorkOrderController {
     public ResponseEntity<Void> logTime(
             @PathVariable Long id,
             @Valid @RequestBody LogTimeRequest request) {
-        workOrderService.logTimeWorked(id, request);
+
+        workOrderService.logTimeWorked(
+                id,
+                request
+        );
+
         return ResponseEntity.noContent().build();
     }
 }

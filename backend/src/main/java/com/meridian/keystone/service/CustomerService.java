@@ -2,114 +2,177 @@ package com.meridian.keystone.service;
 
 import com.meridian.keystone.domain.Customer;
 import com.meridian.keystone.domain.Site;
-import com.meridian.keystone.dto.*;
+import com.meridian.keystone.domain.User;
+import com.meridian.keystone.dto.CreateCustomerRequest;
+import com.meridian.keystone.dto.CreateSiteRequest;
+import com.meridian.keystone.dto.CustomerDTO;
+import com.meridian.keystone.dto.SiteDTO;
 import com.meridian.keystone.repository.CustomerRepository;
 import com.meridian.keystone.repository.SiteRepository;
-import com.meridian.keystone.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
 
-    private final CustomerRepository customerRepository;
-    private final SiteRepository siteRepository;
-    private final UserRepository userRepository;
+private final CustomerRepository customerRepository;
+private final SiteRepository siteRepository;
 
-    public PageResponse<CustomerDTO> getAllCustomers(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        Page<CustomerDTO> result = customerRepository.findAll(pageable)
-                .map(CustomerDTO::from);
-        return PageResponse.from(result);
+public Page<CustomerDTO> getAllCustomers(int page, int size) {
+    return customerRepository
+            .findAll(PageRequest.of(page, size))
+            .map(CustomerDTO::from);
+}
+
+public CustomerDTO getCustomerById(Long id) {
+    Customer customer = customerRepository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Customer not found with id: " + id
+                    ));
+
+    return CustomerDTO.from(customer);
+}
+
+@Transactional
+public CustomerDTO createCustomer(CreateCustomerRequest request) {
+
+    Customer customer = Customer.builder()
+            .name(request.getName())
+            .code(request.getCode())
+            .email(request.getEmail())
+            .phone(request.getPhone())
+            .address(request.getAddress())
+            .build();
+
+    Customer savedCustomer =
+            customerRepository.save(customer);
+
+    return CustomerDTO.from(savedCustomer);
+}
+
+@Transactional
+public CustomerDTO updateCustomer(
+        Long id,
+        CreateCustomerRequest request) {
+
+    Customer customer = customerRepository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Customer not found with id: " + id
+                    ));
+
+    customer.setName(request.getName());
+    customer.setCode(request.getCode());
+    customer.setEmail(request.getEmail());
+    customer.setPhone(request.getPhone());
+    customer.setAddress(request.getAddress());
+
+    Customer updatedCustomer =
+            customerRepository.save(customer);
+
+    return CustomerDTO.from(updatedCustomer);
+}
+
+public Page<SiteDTO> getSitesByCustomer(
+        Long customerId,
+        int page,
+        int size) {
+
+    return siteRepository
+            .findByCustomerId(
+                    customerId,
+                    PageRequest.of(page, size)
+            )
+            .map(SiteDTO::from);
+}
+
+@Transactional
+public SiteDTO createSite(
+        Long customerId,
+        CreateSiteRequest request) {
+
+    Customer customer =
+            customerRepository.findById(customerId)
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Customer not found with id: "
+                                            + customerId
+                            ));
+
+    Site site = Site.builder()
+            .name(request.getName())
+            .address(request.getAddress())
+            .city(request.getCity())
+            .postcode(request.getPostcode())
+            .contactPerson(request.getContactPerson())
+            .contactPhone(request.getContactPhone())
+            .customer(customer)
+            .build();
+
+    Site savedSite = siteRepository.save(site);
+
+    return SiteDTO.from(savedSite);
+}
+
+public List<SiteDTO> getCustomerSites(User user) {
+
+    List<SiteDTO> result = new ArrayList<>();
+
+    if (user == null || user.getCustomerOrg() == null) {
+        return result;
     }
 
-    public CustomerDTO getCustomerById(Long id) {
-        Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
-        return CustomerDTO.from(customer);
+    Long customerId = user.getCustomerOrg().getId();
+
+    if (customerId == null) {
+        return result;
     }
 
-    @Transactional
-    public CustomerDTO createCustomer(CreateCustomerRequest request) {
-        if (customerRepository.existsByCode(request.getCode())) {
-            throw new RuntimeException("Customer code already exists: " + request.getCode());
+    List<Site> sites = siteRepository.findByCustomerId(
+            customerId,
+            PageRequest.of(0, Integer.MAX_VALUE)
+    ).getContent();
+
+    for (Site site : sites) {
+        if (site != null) {
+            result.add(SiteDTO.from(site));
         }
-
-        Customer customer = Customer.builder()
-                .name(request.getName())
-                .code(request.getCode().toUpperCase())
-                .contactEmail(request.getContactEmail())
-                .contactPhone(request.getContactPhone())
-                .address(request.getAddress())
-                .build();
-
-        Customer saved = customerRepository.save(customer);
-        log.info("Customer created: {}", saved.getCode());
-        return CustomerDTO.from(saved);
     }
 
-    @Transactional
-    public CustomerDTO updateCustomer(Long id, CreateCustomerRequest request) {
-        Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+    return result;
+}
 
-        customer.setName(request.getName());
-        customer.setContactEmail(request.getContactEmail());
-        customer.setContactPhone(request.getContactPhone());
-        customer.setAddress(request.getAddress());
+public boolean hasAccessToSite(
+        User user,
+        Long siteId) {
 
-        Customer saved = customerRepository.save(customer);
-        log.info("Customer updated: {}", saved.getCode());
-        return CustomerDTO.from(saved);
+    if (user == null
+            || siteId == null
+            || user.getCustomerOrg() == null) {
+        return false;
     }
 
-    public PageResponse<SiteDTO> getSitesByCustomer(Long customerId, int page, int size) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        userRepository.findByEmail(email).ifPresent(user -> {
-            if (user.getRole() == com.meridian.keystone.domain.UserRole.CUSTOMER
-                    && (user.getCustomerOrg() == null || !user.getCustomerOrg().getId().equals(customer.getId()))) {
-                throw new AccessDeniedException("Customer access is limited to your account");
-            }
-        });
+    Long customerId = user.getCustomerOrg().getId();
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        Page<SiteDTO> result = siteRepository.findByCustomerId(customerId, pageable)
-                .map(SiteDTO::from);
-        return PageResponse.from(result);
+    if (customerId == null) {
+        return false;
     }
 
-    @Transactional
-    public SiteDTO createSite(Long customerId, CreateSiteRequest request) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
+    return siteRepository.findById(siteId)
+            .map(site ->
+                    site.getCustomer() != null
+                            && site.getCustomer().getId() != null
+                            && site.getCustomer().getId().equals(customerId)
+            )
+            .orElse(false);
+}
 
-        Site site = Site.builder()
-                .name(request.getName())
-                .address(request.getAddress())
-                .city(request.getCity())
-                .postcode(request.getPostcode())
-                .contactPerson(request.getContactPerson())
-                .contactPhone(request.getContactPhone())
-                .customer(customer)
-                .build();
-
-        Site saved = siteRepository.save(site);
-        log.info("Site created: {} for customer: {}", saved.getName(), customer.getCode());
-        return SiteDTO.from(saved);
-    }
 }

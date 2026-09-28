@@ -9,7 +9,11 @@ import lombok.Data;
 public class CreateWorkOrderRequest {
 
     @NotBlank(message = "Title is required")
-    @Size(min = 3, max = 255, message = "Title must be between 3 and 255 characters")
+    @Size(
+        min = 3,
+        max = 255,
+        message = "Title must be between 3 and 255 characters"
+    )
     private String title;
 
     private String description;
@@ -22,4 +26,9 @@ public class CreateWorkOrderRequest {
 
     @NotNull(message = "Site ID is required")
     private Long siteId;
+
+    private Long assignedToId;
+
+    private String status;
 }
+

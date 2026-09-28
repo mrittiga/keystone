@@ -2,9 +2,8 @@ package com.meridian.keystone.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "sites")
@@ -14,48 +13,47 @@ import java.util.Set;
 @Builder
 public class Site {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
 
-    @Column(nullable = false)
-    private String name;
+@Column(nullable = false)
+private String name;
 
-    private String address;
-    private String city;
-    private String postcode;
+private String address;
 
-    @Column(name = "contact_person")
-    private String contactPerson;
+private String city;
 
-    @Column(name = "contact_phone")
-    private String contactPhone;
+private String postcode;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Customer customer;
+@Column(name = "contact_person")
+private String contactPerson;
 
-    @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @Builder.Default
-    private Set<WorkOrder> workOrders = new HashSet<>();
+@Column(name = "contact_phone")
+private String contactPhone;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "customer_id")
+@ToString.Exclude
+@EqualsAndHashCode.Exclude
+private Customer customer;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+@Column(name = "created_at", nullable = false, updatable = false)
+private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+@Column(name = "updated_at")
+private LocalDateTime updatedAt;
+
+@PrePersist
+public void prePersist() {
+    if (createdAt == null) {
+        createdAt = LocalDateTime.now();
     }
+}
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+@PreUpdate
+public void preUpdate() {
+    updatedAt = LocalDateTime.now();
+}
+
 }

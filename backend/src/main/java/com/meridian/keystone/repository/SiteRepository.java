@@ -7,11 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
-public interface SiteRepository extends JpaRepository {
-    Page findByCustomerId(Long customerId, Pageable pageable);
-    List findByCustomerIdAndNameContainingIgnoreCase(Long customerId, String name);
-    Optional findFirstByOrderByIdAsc();
+public interface SiteRepository extends JpaRepository<Site, Long> {
+
+Page<Site> findByCustomerId(
+        Long customerId,
+        Pageable pageable
+);
+
+List<Site> findByCustomerId(
+        Long customerId
+);
+
+List<Site> findByCustomer_Id(
+        Long customerId
+);
+
 }

@@ -12,50 +12,75 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
-
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+@Autowired
+private UserRepository userRepository;
 
-    @Autowired
-    private JwtTokenProvider tokenProvider;
+@Autowired
+private JwtTokenProvider tokenProvider;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+@Autowired
+private PasswordEncoder passwordEncoder;
 
-    public AuthResponse login(LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail().trim().toLowerCase())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+public AuthResponse login(LoginRequest loginRequest) {
 
-        if (!Boolean.TRUE.equals(user.getActive())
-            || !passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
-        }
+    User user = userRepository.findByEmail(
+            loginRequest.getEmail().trim().toLowerCase()
+    ).orElseThrow(() ->
+            new RuntimeException("Invalid email or password")
+    );
 
-        String role = (user.getRole() != null) ? user.getRole().name() : "ROLE_CUSTOMER";
-        String token = tokenProvider.generateToken(user.getEmail(), role);
+    if (!Boolean.TRUE.equals(user.getActive())
+            || !passwordEncoder.matches(
+                    loginRequest.getPassword(),
+                    user.getPasswordHash()
+            )) {
 
-        return new AuthResponse(token, AuthUserResponse.from(user));
+        throw new RuntimeException("Invalid email or password");
     }
 
-    public void register(RegisterRequest registerRequest) {
-        String email = registerRequest.getEmail().toLowerCase();
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email already in use: " + email);
-        }
+    String role = (user.getRole() != null)
+            ? user.getRole().name()
+            : "CUSTOMER";
 
-        User user = User.builder()
-                .email(email)
-                .name(registerRequest.getName())
-                .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
-                .role(UserRole.CUSTOMER)
-                .roles(Set.of("ROLE_CUSTOMER"))
-                .active(true)
-                .build();
+    String token = tokenProvider.generateToken(
+            user.getEmail(),
+            role
+    );
 
-        userRepository.save(user);
+    return new AuthResponse(
+            token,
+            AuthUserResponse.from(user)
+    );
+}
+
+public void register(RegisterRequest registerRequest) {
+
+    String email = registerRequest.getEmail()
+            .trim()
+            .toLowerCase();
+
+    if (userRepository.existsByEmail(email)) {
+        throw new RuntimeException(
+                "Email already in use: " + email
+        );
     }
+
+    User user = User.builder()
+            .email(email)
+            .name(registerRequest.getName())
+            .passwordHash(
+                    passwordEncoder.encode(
+                            registerRequest.getPassword()
+                    )
+            )
+            .role(UserRole.CUSTOMER)
+            .active(true)
+            .build();
+
+    userRepository.save(user);
+}
+
 }

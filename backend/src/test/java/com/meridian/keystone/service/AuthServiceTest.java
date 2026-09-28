@@ -16,63 +16,99 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+@Mock
+private UserRepository userRepository;
 
-    @Mock
-    private JwtTokenProvider tokenProvider;
+@Mock
+private JwtTokenProvider tokenProvider;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+@Mock
+private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
-    private AuthService authService;
+@InjectMocks
+private AuthService authService;
 
-    @Test
-    void loginReturnsCustomerIdentityForValidCredentials() {
-        User user = User.builder()
-                .id(7L)
-                .email("customer@example.com")
-                .name("Customer")
-                .passwordHash("hashed")
-                .role(UserRole.CUSTOMER)
-                .active(true)
-                .build();
-        LoginRequest request = new LoginRequest();
-        request.setEmail(user.getEmail());
-        request.setPassword("correct");
+@Test
+void loginReturnsCustomerIdentityForValidCredentials() {
 
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("correct", "hashed")).thenReturn(true);
-        when(tokenProvider.generateToken(user.getEmail(), "CUSTOMER")).thenReturn("Bearer token");
+    User user = User.builder()
+            .id(7L)
+            .email("customer@example.com")
+            .name("Customer")
+            .passwordHash("hashed")
+            .role(UserRole.CUSTOMER)
+            .active(true)
+            .build();
 
-        AuthResponse response = authService.login(request);
+    LoginRequest request = new LoginRequest();
+    request.setEmail(user.getEmail());
+    request.setPassword("correct");
 
-        assertEquals("Bearer token", response.getToken());
-        assertEquals(user.getEmail(), response.getEmail());
-    }
+    when(userRepository.findByEmail(user.getEmail()))
+            .thenReturn(Optional.of(user));
 
-    @Test
-    void loginRejectsInvalidPassword() {
-        User user = User.builder()
-                .email("customer@example.com")
-                .passwordHash("hashed")
-                .role(UserRole.CUSTOMER)
-                .active(true)
-                .build();
-        LoginRequest request = new LoginRequest();
-        request.setEmail(user.getEmail());
-        request.setPassword("wrong");
+    when(passwordEncoder.matches("correct", "hashed"))
+            .thenReturn(true);
 
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
+    when(tokenProvider.generateToken(
+            user.getEmail(),
+            "CUSTOMER"
+    )).thenReturn("Bearer token");
 
-        assertThrows(RuntimeException.class, () -> authService.login(request));
-    }
+    AuthResponse response = authService.login(request);
+
+    assertNotNull(response);
+    assertEquals("Bearer token", response.getToken());
+
+    assertNotNull(response.getUser());
+
+    assertEquals(
+            user.getEmail(),
+            response.getUser().getEmail()
+    );
+
+    assertEquals(
+            user.getName(),
+            response.getUser().getName()
+    );
+
+    assertEquals(
+            "CUSTOMER",
+            response.getUser().getRoles().iterator().next()
+    );
+}
+
+@Test
+void loginRejectsInvalidPassword() {
+
+    User user = User.builder()
+            .email("customer@example.com")
+            .passwordHash("hashed")
+            .role(UserRole.CUSTOMER)
+            .active(true)
+            .build();
+
+    LoginRequest request = new LoginRequest();
+    request.setEmail(user.getEmail());
+    request.setPassword("wrong");
+
+    when(userRepository.findByEmail(user.getEmail()))
+            .thenReturn(Optional.of(user));
+
+    when(passwordEncoder.matches("wrong", "hashed"))
+            .thenReturn(false);
+
+    assertThrows(
+            RuntimeException.class,
+            () -> authService.login(request)
+    );
+}
+
 }

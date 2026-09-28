@@ -1,17 +1,17 @@
 package com.meridian.keystone.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import java.util.Set;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthResponse {
-    private String token;
-    private String email;
-    private Set roles;
 
-    public AuthResponse(String token, String email, Set roles) {
-        this.token = token;
-        this.email = email;
-        this.roles = roles;
-    }
+private String token;
+private AuthUserResponse user;
+
 }
