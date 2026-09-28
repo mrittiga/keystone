@@ -63,7 +63,10 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST;
 
         if (ex.getMessage() != null) {
-            if (ex.getMessage().contains("not found")) {
+            if (ex.getMessage().contains("Invalid email or password") ||
+                ex.getMessage().contains("Invalid credentials")) {
+                status = HttpStatus.UNAUTHORIZED;
+            } else if (ex.getMessage().contains("not found")) {
                 status = HttpStatus.NOT_FOUND;
             } else if (ex.getMessage().contains("Invalid transition") ||
                        ex.getMessage().contains("409")) {

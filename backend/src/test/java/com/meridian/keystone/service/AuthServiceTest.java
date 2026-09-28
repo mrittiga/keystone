@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,6 +110,37 @@ void loginRejectsInvalidPassword() {
             RuntimeException.class,
             () -> authService.login(request)
     );
+}
+
+@Test
+void registerSuccessfullyCreatesUserWithSpecifiedRole() {
+    com.meridian.keystone.dto.RegisterRequest request = new com.meridian.keystone.dto.RegisterRequest();
+    request.setName("Alice Dispatcher");
+    request.setEmail("dispatcher@example.com");
+    request.setPassword("password123");
+    request.setRole(UserRole.DISPATCHER);
+
+    when(userRepository.existsByEmail("dispatcher@example.com")).thenReturn(false);
+    when(passwordEncoder.encode("password123")).thenReturn("encodedSecret");
+
+    User savedUser = User.builder()
+            .id(10L)
+            .email("dispatcher@example.com")
+            .name("Alice Dispatcher")
+            .passwordHash("encodedSecret")
+            .role(UserRole.DISPATCHER)
+            .active(true)
+            .build();
+
+    when(userRepository.save(any(User.class))).thenReturn(savedUser);
+    when(tokenProvider.generateToken("dispatcher@example.com", "DISPATCHER")).thenReturn("Bearer token-dispatcher");
+
+    AuthResponse response = authService.register(request);
+
+    assertNotNull(response);
+    assertEquals("Bearer token-dispatcher", response.getToken());
+    assertEquals("dispatcher@example.com", response.getUser().getEmail());
+    assertEquals("DISPATCHER", response.getUser().getRoles().iterator().next());
 }
 
 }

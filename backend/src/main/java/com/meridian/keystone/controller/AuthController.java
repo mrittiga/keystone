@@ -11,8 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.meridian.keystone.dto.RegisterRequest;
+import org.springframework.http.HttpStatus;
+
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping({"/api/v1/auth", "/api/auth"})
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -31,6 +34,16 @@ public ResponseEntity<AuthResponse> login(
             authService.login(loginRequest);
 
     return ResponseEntity.ok(response);
+}
+
+@PostMapping("/register")
+public ResponseEntity<AuthResponse> register(
+        @Valid @RequestBody RegisterRequest request) {
+
+    AuthResponse response =
+            authService.register(request);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
 }
 
 @GetMapping("/me")

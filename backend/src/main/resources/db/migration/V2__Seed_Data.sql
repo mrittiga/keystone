@@ -3,11 +3,11 @@ INSERT INTO customers (name, code, contact_email, contact_phone, address) VALUES
 ('Tech Innovations Inc', 'CUST_002', 'hello@techinnovations.com', '+1-555-0200', '456 Innovation St, San Francisco');
 
 INSERT INTO users (email, name, password_hash, role, active, customer_id) VALUES
-('dispatcher@meridian.com', 'John Dispatcher', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'DISPATCHER', true, NULL),
-('technician@meridian.com', 'Mike Technician', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'TECHNICIAN', true, NULL),
-('manager@meridian.com', 'Sarah Manager', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MANAGER', true, NULL),
-('customer@acme.com', 'Alice Customer', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'CUSTOMER', true, 1),
-('customer2@techinnovations.com', 'Bob Customer', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'CUSTOMER', true, 2);
+('dispatcher@meridian.com', 'John Dispatcher', '$2a$10$ZGmzI3VM2q0UTz1nA40YGObNvWk0WMvGVtBLQ0UjRBFh7WH4uAWOS', 'DISPATCHER', true, NULL),
+('technician@meridian.com', 'Mike Technician', '$2a$10$ZGmzI3VM2q0UTz1nA40YGObNvWk0WMvGVtBLQ0UjRBFh7WH4uAWOS', 'TECHNICIAN', true, NULL),
+('manager@meridian.com', 'Sarah Manager', '$2a$10$ZGmzI3VM2q0UTz1nA40YGObNvWk0WMvGVtBLQ0UjRBFh7WH4uAWOS', 'MANAGER', true, NULL),
+('customer@acme.com', 'Alice Customer', '$2a$10$ZGmzI3VM2q0UTz1nA40YGObNvWk0WMvGVtBLQ0UjRBFh7WH4uAWOS', 'CUSTOMER', true, 1),
+('customer2@techinnovations.com', 'Bob Customer', '$2a$10$ZGmzI3VM2q0UTz1nA40YGObNvWk0WMvGVtBLQ0UjRBFh7WH4uAWOS', 'CUSTOMER', true, 2);
 
 INSERT INTO sites (name, address, city, postcode, contact_person, contact_phone, customer_id) VALUES
 ('ACME Manhattan Office', '123 Business Ave', 'New York', '10001', 'John Smith', '+1-555-0110', 1),
@@ -23,9 +23,9 @@ INSERT INTO parts (sku, name, description, unit_cost, stock_quantity, min_stock_
 
 INSERT INTO work_orders (code, title, description, status, priority, customer_id, site_id, assigned_to_id, sla_due_date, sla_breached) VALUES
 ('WO-2025-00001', 'HVAC Annual Maintenance', 'Routine HVAC maintenance and filter change', 'NEW', 'MEDIUM', 1, 1, NULL, NULL, false),
-('WO-2025-00002', 'Electrical Panel Repair', 'Fix circuit breaker issues in main panel', 'ASSIGNED', 'HIGH', 1, 1, 2, NOW() + INTERVAL '8 hours', false),
-('WO-2025-00003', 'Plumbing Inspection', 'Water system inspection and pressure check', 'IN_PROGRESS', 'MEDIUM', 2, 3, 2, NOW() + INTERVAL '24 hours', false),
-('WO-2025-00004', 'Emergency AC Unit Failure', 'Urgent AC unit failure', 'ASSIGNED', 'URGENT', 1, 2, 2, NOW() - INTERVAL '2 hours', true);
+('WO-2025-00002', 'Electrical Panel Repair', 'Fix circuit breaker issues in main panel', 'ASSIGNED', 'HIGH', 1, 1, 2, CURRENT_TIMESTAMP + INTERVAL '8' HOUR, false),
+('WO-2025-00003', 'Plumbing Inspection', 'Water system inspection and pressure check', 'IN_PROGRESS', 'MEDIUM', 2, 3, 2, CURRENT_TIMESTAMP + INTERVAL '24' HOUR, false),
+('WO-2025-00004', 'Emergency AC Unit Failure', 'Urgent AC unit failure', 'ASSIGNED', 'URGENT', 1, 2, 2, CURRENT_TIMESTAMP - INTERVAL '2' HOUR, true);
 
 INSERT INTO work_order_status_history (work_order_id, from_status, to_status, changed_by_id, note) VALUES
 (1, 'NEW', 'NEW', 1, 'Work order created'),

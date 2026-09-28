@@ -56,7 +56,7 @@ public AuthResponse login(LoginRequest loginRequest) {
     );
 }
 
-public void register(RegisterRequest registerRequest) {
+public AuthResponse register(RegisterRequest registerRequest) {
 
     String email = registerRequest.getEmail()
             .trim()
@@ -68,6 +68,10 @@ public void register(RegisterRequest registerRequest) {
         );
     }
 
+    UserRole role = registerRequest.getRole() != null
+            ? registerRequest.getRole()
+            : UserRole.CUSTOMER;
+
     User user = User.builder()
             .email(email)
             .name(registerRequest.getName())
@@ -76,11 +80,21 @@ public void register(RegisterRequest registerRequest) {
                             registerRequest.getPassword()
                     )
             )
-            .role(UserRole.CUSTOMER)
+            .role(role)
             .active(true)
             .build();
 
-    userRepository.save(user);
+    User savedUser = userRepository.save(user);
+
+    String token = tokenProvider.generateToken(
+            savedUser.getEmail(),
+            role.name()
+    );
+
+    return new AuthResponse(
+            token,
+            AuthUserResponse.from(savedUser)
+    );
 }
 
 }

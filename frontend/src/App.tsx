@@ -14,11 +14,8 @@ import Reports        from './pages/Reports'
 import Layout         from './components/Layout'
 import PrivateRoute   from './components/PrivateRoute'
 import RoleBasedRoute, { roleHomePath } from './components/RoleBasedRoute'
-import type { Role } from './types'
 
 function AppShell({ initialPage }: { initialPage: string }) {
-  const { user } = useAuthStore()
-
   const [page, setPage]                  = useState(initialPage)
   const [selectedOrderId, setSelectedId] = useState<number | null>(null)
 
@@ -53,10 +50,6 @@ function AppShell({ initialPage }: { initialPage: string }) {
 function RoleHome() {
   const user = useAuthStore(state => state.user)
   return user ? <Navigate to={roleHomePath(user.role)} replace /> : <Navigate to="/login" replace />
-}
-
-function RolePage({ roles, page }: { roles: Role[]; page: string }) {
-  return <RoleBasedRoute roles={roles} />
 }
 
 export default function App() {

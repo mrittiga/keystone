@@ -12,4 +12,9 @@ public class HealthController {
     public ResponseEntity<Map<String, String>> root() {
         return ResponseEntity.ok(Map.of("service", "keystone", "status", "UP"));
     }
+
+    @GetMapping("/favicon.ico")
+    public ResponseEntity<Void> favicon() {
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -2,12 +2,13 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { Role } from '../types'
 
-export function roleHomePath(role: Role) {
+export function roleHomePath(role?: Role) {
   switch (role) {
     case 'MANAGER': return '/manager/dashboard'
     case 'DISPATCHER': return '/dispatcher/dashboard'
     case 'TECHNICIAN': return '/technician/dashboard'
     case 'CUSTOMER': return '/customer/dashboard'
+    default: return '/login'
   }
 }
 

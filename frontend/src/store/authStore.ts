@@ -27,11 +27,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const identity = data.user ?? data
       const customerId = (identity.customerId !== null && identity.customerId !== undefined)
         ? Number(identity.customerId) : undefined
+      const rawRole = identity.role
+        ?? (Array.isArray(identity.roles) ? identity.roles[0] : null)
+        ?? (typeof identity.roles === 'object' && identity.roles ? Array.from(identity.roles)[0] : null)
+        ?? 'CUSTOMER'
       const user: AuthUser = {
         userId: Number(identity.id ?? identity.userId),
         email: identity.email,
         name: identity.name,
-        role: String(identity.role).toUpperCase() as AuthUser['role'],
+        role: String(rawRole).toUpperCase() as AuthUser['role'],
         customerId,
       }
       localStorage.setItem('token', token)
